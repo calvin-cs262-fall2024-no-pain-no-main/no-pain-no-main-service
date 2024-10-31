@@ -1,0 +1,19 @@
+{
+  "name": "service",
+  "version": "1.0.0",
+  "description": "This repo contains(eventually) the backend code for our fitness app project. Our frontend code can be found in our [Client Repo](https://github.com/calvin-cs262-fall2024-no-pain-no-main/Client), and our project deliverables due at each sprint can be found in our [Project Repo](https://github.com/calvin-cs262-fall2024-no-pain-no-main/Project)",
+  "main": "server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.21.1",
+    "pg": "^8.13.1"
+  }
+}
