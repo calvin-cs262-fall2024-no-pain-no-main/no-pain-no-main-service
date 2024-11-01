@@ -63,6 +63,7 @@ const testLogin = async (username, password) => {
 // Example usage of testLogin
 testLogin('test', 'demo123'); // Replace with actual test credentials
 testLogin('test', 'demo1234');
+console.log("This is a test!");
 
 app.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);
