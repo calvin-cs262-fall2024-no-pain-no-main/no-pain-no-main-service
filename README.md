@@ -1,5 +1,15 @@
-# Service
-This repo contains(eventually) the backend code for our fitness app project. Our frontend code can be found
-in our [Client Repo](https://github.com/calvin-cs262-fall2024-no-pain-no-main/Client), and our project deliverables due at each sprint can be found in our [Project Repo](https://github.com/calvin-cs262-fall2024-no-pain-no-main/Project)
+# no-pain-no-main: Revive Service
 
-Our vision statement is located in the README.md files in both Project and Client repos.
+
+This repo contains the back-end code for our App, which is located
+in our [Client Repo](https://github.com/calvin-cs262-fall2024-no-pain-no-main/Client)
+
+Our back-end is hosted at https://no-pain-no-main.azurewebsites.net/
+
+It is based on the Azure App Servcie tutorial [here](https://learn.microsoft.com/en-us/azure/app-service/quickstart-nodejs?tabs=linux&pivots=development-environment-cli)
+
+We have a relational database that is being hosted on [PostgreSQL](https://www.postgresql.org/). Right now, it has minimal functionality, and we aim to make it more robust in the coming sprint.
+
+This repo has been configured so that when we update the main branch, our Azure App Service will auto-deploy.
+
+Our project deliverables due at each sprint can be found in our [Project Repo](https://github.com/calvin-cs262-fall2024-no-pain-no-main/Project).
