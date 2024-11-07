@@ -27,6 +27,7 @@ app.use(cors({
 // Endpoint to check if a user exists
 app.post('/login', async (req, res) => {
     const { username, password } = req.body;
+    console.log("received data", { username, password });
 
     try {
         const result = await pool.query(
@@ -46,6 +47,9 @@ app.post('/login', async (req, res) => {
     }
 });
 
+app.get('/', (req, res) => {
+    res.send('Server is running!');
+});
 
 //used this function for testing locally before deploying on Azure
 const testLogin = async (username, password) => {
@@ -60,6 +64,7 @@ const testLogin = async (username, password) => {
         console.error('Error executing test query', error.stack);
     }
 };
+//tests were here but I removed them
 
 
 app.listen(PORT, () => {
