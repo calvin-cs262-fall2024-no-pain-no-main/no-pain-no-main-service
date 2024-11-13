@@ -20,12 +20,15 @@ const pool = new Pool({
 });
 
 app.use(express.json());
-app.use(cors({
-    origin: '*', // Adjust this to your needs in production
-}));
+app.use(cors({ origin: '*' })); // Adjust CORS settings as needed
 
-// Endpoint to check if a user exists
-app.post('/login', async (req, res) => {
+// Handler for root route
+const readHelloMessage = (req, res) => {
+    res.send('Server is running!');
+};
+
+// Handler to check if a user exists
+const checkUserExists = async (req, res) => {
     const { username, password } = req.body;
     console.log("received data", { username, password });
 
@@ -42,31 +45,27 @@ app.post('/login', async (req, res) => {
         }
     } catch (error) {
         console.error(error);
-        console.log("Uh oh");
         res.status(500).json({ error: 'Internal server error' });
     }
-});
+};
 
-app.get('/', (req, res) => {
-    res.send('Server is running!');
-});
-
-//used this function for testing locally before deploying on Azure
-const testLogin = async (username, password) => {
+// Handler to get all exercises
+const getAllExercises = async (req, res) => {
     try {
-        const result = await pool.query('SELECT * FROM users WHERE username = $1 AND password = $2', [username, password]);
-        if (result.rows.length > 0) {
-            console.log(`User ${username} found! Login successful.`);
-        } else {
-            console.log(`User ${username} not found or incorrect password.`);
-        }
+        const result = await pool.query('SELECT * FROM exercise');
+        res.status(200).json(result.rows);
     } catch (error) {
-        console.error('Error executing test query', error.stack);
+        console.error(error);
+        res.status(500).json({ error: 'Internal server error' });
     }
 };
-//tests were here but I removed them
 
+// Define routes
+app.get('/', readHelloMessage);
+app.post('/login', checkUserExists);
+app.get('/exercises', getAllExercises);
 
+// Start the server
 app.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);
 });
