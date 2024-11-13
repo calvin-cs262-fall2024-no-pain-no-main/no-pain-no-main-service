@@ -1,74 +1,71 @@
-const pgp = require('pg-promise')();
+// service/index.js
 const express = require('express');
-const app = express();
-const port = process.env.PORT || 3000;
-const router = express.Router();
-router.use(express.json());
-
+const cors = require('cors');
+const { Pool } = require('pg');
 const dotenv = require('dotenv');
+
 dotenv.config();
 
-const db = pgp({
-    host: process.env.DB_HOST,
-    port: process.env.DB_PORT,
-    database: process.env.DB_NAME,
+const app = express();
+const PORT = process.env.PORT || 3000;
+
+// Configure PostgreSQL connection pool
+const pool = new Pool({
     user: process.env.DB_USER,
+    host: process.env.DB_HOST,
+    database: process.env.DB_NAME,
     password: process.env.DB_PASSWORD,
+    port: process.env.DB_PORT,
     ssl: { rejectUnauthorized: false }
 });
 
+app.use(express.json());
+app.use(cors({ origin: '*' })); // Adjust CORS settings as needed
 
-router.get('/', readHelloMessage);
-router.post('/login', checkLogin);
-router.post('/createUser', createUser);
-
-
-app.use(router);
-app.listen(port, () => console.log(`Listening on port ${port}`));
-
-
-function readHelloMessage(req, res) {
-    res.send('Hello! I see you are looking at our web app!');
+// Handler for root route
+const readHelloMessage = (req, res) => {
+    res.send('Server is running!');
 };
 
-async function checkLogin(req, res, next) {
+// Handler to check if a user exists
+const checkUserExists = async (req, res) => {
     const { username, password } = req.body;
+    console.log("received data", { username, password });
 
     try {
-        const result = await db.any(
+        const result = await pool.query(
             'SELECT * FROM users WHERE username = $1 AND password = $2',
             [username, password]
         );
 
-        if (result.length > 0) {
+        if (result.rows.length > 0) {
             res.status(200).json({ exists: true });
         } else {
             res.status(404).json({ exists: false });
         }
     } catch (error) {
-        next(error);
+        console.error(error);
+        res.status(500).json({ error: 'Internal server error' });
     }
 };
 
-async function createUser(req, res) {
-    const { username, password } = req.body;
-
-    if (!username || !password) {
-        return res.status(400).json({ error: 'Username and password are required' });
-    }
-
+// Handler to get all exercises
+const getAllExercises = async (req, res) => {
     try {
-        // Insert new user into the users table
-        const result = await db.one(
-            'INSERT INTO users (username, password) VALUES ($1, $2) RETURNING id',
-            [username, password]
-        );
-
-        res.status(201).json({
-            message: 'User created successfully',
-            userId: result.id
-        });
+        const result = await pool.query('SELECT * FROM exercise');
+        res.status(200).json(result.rows);
     } catch (error) {
-        next(error);
+        console.error(error);
+        res.status(500).json({ error: 'Internal server error' });
     }
 };
+
+// Define routes
+app.get('/', readHelloMessage);
+app.post('/login', checkUserExists);
+app.get('/exercises', getAllExercises);
+
+// Start the server
+app.listen(PORT, () => {
+    console.log(`Server is running on port ${PORT}`);
+});
