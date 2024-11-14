@@ -20,12 +20,15 @@ const pool = new Pool({
 });
 
 app.use(express.json());
-app.use(cors({
-    origin: '*', // Adjust this to your needs in production
-}));
+app.use(cors({ origin: '*' })); // Adjust CORS settings as needed
 
-// Endpoint to check if a user exists
-app.post('/login', async (req, res) => {
+// Handler for root route
+const readHelloMessage = (req, res) => {
+    res.send('Server is running!');
+};
+
+// Handler to check if a user exists
+const checkUserExists = async (req, res) => {
     const { username, password } = req.body;
     console.log("received data", { username, password });
     try {
@@ -40,42 +43,65 @@ app.post('/login', async (req, res) => {
         }
     } catch (error) {
         console.error(error);
-        console.log("Uh oh");
         res.status(500).json({ error: 'Internal server error' });
     }
-});
+};
 
-app.get('/exercises', async (req, res) => {
+// Handler to get all exercises
+const getAllExercises = async (req, res) => {
     try {
         const result = await pool.query('SELECT * FROM exercise');
-        res.send('Server is running!');
         res.status(200).json(result.rows);
     } catch (error) {
         console.error(error);
         res.status(500).json({ error: 'Internal server error' });
     }
-});
+};
 
-app.get('/', (req, res) => {
-    res.send('Server is running!');
-});
 
-//used this function for testing locally before deploying on Azure
-const testLogin = async (username, password) => {
+const getWorkoutTemplate = async (req, res) => {
     try {
-        const result = await pool.query('SELECT * FROM users WHERE username = $1 AND password = $2', [username, password]);
+        // Parse the id from req.params and convert it to an integer
+        const id = parseInt(req.params.id, 10);
+
+        // Query the workout based on the id and ispublic status
+        const result = await pool.query("SELECT * FROM workout WHERE ispublic = true AND id = $1", [id]);
+
+        // Check if a workout was found and return the result
         if (result.rows.length > 0) {
-            console.log(`User ${username} found! Login successful.`);
+            res.status(200).json(result.rows[0]);
         } else {
-            console.log(`User ${username} not found or incorrect password.`);
+            res.status(404).json({ error: 'Workout not found' });
         }
     } catch (error) {
-        console.error('Error executing test query', error.stack);
+        console.error(error);
+        res.status(500).json({ error: 'Internal server error' });
     }
 };
-//tests were here but I removed them
+
+// const getWorkoutExercises = async (req, res) => {
+//     try {
+//         const result = await pool.query(`SELECT * FROM workoutexercises WHERE workoutid = 1
+//             UNION ALL
+//             SELECT name FROM workout
+//             `);
+//         res.status(200).json(result.rows);
+//     } catch (error) {
+//         console.error(error);
+//         res.status(500).json({ error: 'Internal server error' });
+//     }
+// }
 
 
+
+// Define routes
+app.get('/', readHelloMessage);
+app.post('/login', checkUserExists);
+app.get('/exercises', getAllExercises);
+app.get('/workout:id', getWorkoutTemplate)
+// app.get('/myExercises', getWorkoutExercises)
+
+// Start the server
 app.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);
 });
