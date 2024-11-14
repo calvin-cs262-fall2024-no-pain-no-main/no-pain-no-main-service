@@ -9,15 +9,15 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Configure PostgreSQL connection pool
 const pool = new Pool({
     user: process.env.DB_USER,
     host: process.env.DB_HOST,
     database: process.env.DB_NAME,
     password: process.env.DB_PASSWORD,
     port: process.env.DB_PORT,
-    ssl: { rejectUnauthorized: false }
+    ssl:  { rejectUnauthorized: false },
 });
+
 
 app.use(express.json());
 app.use(cors({ origin: '*' })); // Adjust CORS settings as needed
@@ -81,25 +81,47 @@ const getWorkoutTemplate = async (req, res) => {
 
 // const getWorkoutExercises = async (req, res) => {
 //     try {
-//         const result = await pool.query(`SELECT * FROM workoutexercises WHERE workoutid = 1
-//             UNION ALL
-//             SELECT name FROM workout
-//             `);
+
+//         const id = parseInt(req.params.id, 10);
+        
+//         const result = await pool.query(
+//             `SELECT exercise.*, workoutexercises.workoutid 
+//              FROM exercise
+//              JOIN workoutexercises ON exercise.id = workoutexercises.exerciseid
+//              WHERE workoutexercises.workoutid = $1`, [id]
+//         );
 //         res.status(200).json(result.rows);
 //     } catch (error) {
 //         console.error(error);
 //         res.status(500).json({ error: 'Internal server error' });
 //     }
-// }
+// };
 
+const getWorkoutData = async (req, res) => {
+    try {
+        const id = parseInt(req.params.id, 10);
+
+        const result = await pool.query(
+            `SELECT exercise.*, workoutexercises.*
+             FROM workoutexercises
+             JOIN exercise ON workoutexercises.exerciseid = exercise.id
+             WHERE workoutexercises.workoutid = $1`, [id]
+        );
+
+        res.status(200).json(result.rows);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+};
 
 
 // Define routes
 app.get('/', readHelloMessage);
 app.post('/login', checkUserExists);
 app.get('/exercises', getAllExercises);
-app.get('/workout:id', getWorkoutTemplate)
-// app.get('/myExercises', getWorkoutExercises)
+app.get('/workout:id', getWorkoutTemplate);
+app.get('/workout:id/exerciseData', getWorkoutData);
 
 // Start the server
 app.listen(PORT, () => {
