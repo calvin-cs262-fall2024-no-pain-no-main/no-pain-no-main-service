@@ -15,7 +15,7 @@ const pool = new Pool({
     database: process.env.DB_NAME,
     password: process.env.DB_PASSWORD,
     port: process.env.DB_PORT,
-    ssl:  { rejectUnauthorized: false },
+    ssl: { rejectUnauthorized: false },
 });
 
 
@@ -79,23 +79,6 @@ const getWorkoutTemplate = async (req, res) => {
     }
 };
 
-// const getWorkoutExercises = async (req, res) => {
-//     try {
-
-//         const id = parseInt(req.params.id, 10);
-        
-//         const result = await pool.query(
-//             `SELECT exercise.*, workoutexercises.workoutid 
-//              FROM exercise
-//              JOIN workoutexercises ON exercise.id = workoutexercises.exerciseid
-//              WHERE workoutexercises.workoutid = $1`, [id]
-//         );
-//         res.status(200).json(result.rows);
-//     } catch (error) {
-//         console.error(error);
-//         res.status(500).json({ error: 'Internal server error' });
-//     }
-// };
 
 const getWorkoutData = async (req, res) => {
     try {
@@ -115,6 +98,41 @@ const getWorkoutData = async (req, res) => {
     }
 };
 
+const saveWorkout = async (req, res) => {
+    const { name, description, exercises } = req.body;
+
+    try {
+        // Step 1: Insert the workout and retrieve the new workout ID
+        const workoutResult = await pool.query(
+            'INSERT INTO workout (name, description, ispublic) VALUES ($1, $2, $3) RETURNING id',
+            [name, description, true]
+        );
+
+        const workoutId = workoutResult.rows[0].id;
+
+        console.log(`New workout created with ID: ${workoutId}`);
+
+        // Step 2: Insert exercises with workoutId, handling missing restTime with a default value
+        const workoutExercisesPromises = exercises.map((exercise) => {
+            const { sets, reps, resttime = 60, exerciseid } = exercise; // Default restTime to 60 seconds if not provided
+
+            return pool.query(
+                'INSERT INTO workoutexercises (sets, reps, resttime, exerciseid, workoutid) VALUES ($1, $2, $3, $4, $5)',
+                [sets, reps, resttime, exerciseid, workoutId]
+            );
+        });
+
+        await Promise.all(workoutExercisesPromises);
+
+        res.status(201).json({ message: 'Workout created successfully', workoutId });
+    } catch (error) {
+        console.error('Error saving workout:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+};
+
+
+
 
 // Define routes
 app.get('/', readHelloMessage);
@@ -122,6 +140,7 @@ app.post('/login', checkUserExists);
 app.get('/exercises', getAllExercises);
 app.get('/workout:id', getWorkoutTemplate);
 app.get('/workout:id/exerciseData', getWorkoutData);
+app.post('/saveworkout', saveWorkout)
 
 // Start the server
 app.listen(PORT, () => {
