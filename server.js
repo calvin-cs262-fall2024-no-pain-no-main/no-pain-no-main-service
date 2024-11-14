@@ -60,10 +60,48 @@ const getAllExercises = async (req, res) => {
     }
 };
 
+
+const getWorkoutTemplate = async (req, res) => {
+    try {
+        // Parse the id from req.params and convert it to an integer
+        const id = parseInt(req.params.id, 10);
+
+        // Query the workout based on the id and ispublic status
+        const result = await pool.query("SELECT * FROM workout WHERE ispublic = true AND id = $1", [id]);
+
+        // Check if a workout was found and return the result
+        if (result.rows.length > 0) {
+            res.status(200).json(result.rows[0]);
+        } else {
+            res.status(404).json({ error: 'Workout not found' });
+        }
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+};
+
+// const getWorkoutExercises = async (req, res) => {
+//     try {
+//         const result = await pool.query(`SELECT * FROM workoutexercises WHERE workoutid = 1
+//             UNION ALL
+//             SELECT name FROM workout
+//             `);
+//         res.status(200).json(result.rows);
+//     } catch (error) {
+//         console.error(error);
+//         res.status(500).json({ error: 'Internal server error' });
+//     }
+// }
+
+
+
 // Define routes
 app.get('/', readHelloMessage);
 app.post('/login', checkUserExists);
 app.get('/exercises', getAllExercises);
+app.get('/workout:id', getWorkoutTemplate)
+// app.get('/myExercises', getWorkoutExercises)
 
 // Start the server
 app.listen(PORT, () => {
