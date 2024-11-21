@@ -12,6 +12,7 @@ CREATE TABLE Users (
     height integer,
     weight float,
     experienceType varchar(25)
+    hasLoggedIn BOOLEAN DEFAULT FALSE
 );
 
 -- Workout table
@@ -37,7 +38,7 @@ CREATE TABLE WorkoutExercises (
     sets integer,
     reps integer,
     restTime integer,
-    ExerciseID integer REFERENCES Exercise(id), 
+    ExerciseID integer REFERENCES Exercise(id),
     WorkoutID integer REFERENCES Workout(id)
 );
 
@@ -54,7 +55,7 @@ CREATE TABLE Quiz (
 
 -- Our data for User table
 INSERT INTO Users (id, username, password, height, weight, experienceType)
-VALUES 
+VALUES
     (1, 'test@gmail.com', 'demo123', 75.5, 180, 'Intermediate'),
     (2, 'zmr7@calvin.com', 'zmr7', 76, 190, 'Advanced'),
     (3, 'bjs55@calvin.edu', 'bjs55', 74, 145, 'Beginner'),
@@ -158,7 +159,7 @@ VALUES
 
 -- Our data for the Workout table
 INSERT INTO Workout (id, description, name, isPublic, userId)
-VALUES 
+VALUES
     (1, 'A workout focused on using your pull muscles - biceps, back, and forearms.', 'Pull Day', TRUE, NULL),
     (2, 'A workout focused on using your push muscles - chest, triceps, and shoulders.', 'Push Day', TRUE, NULL),
     (3, 'A workout focused on using you legs - quadriceps, hamstrings, glutes, and calves.', 'Leg Day', TRUE, NULL),
@@ -167,7 +168,7 @@ VALUES
 
 -- Sample data for WorkoutExercises table
 INSERT INTO WorkoutExercises (id, sets, reps, restTime, workoutId, exerciseId)
-VALUES 
+VALUES
     (1, 4, 8, 90, 1, 11),
     (2, 4, 8, 90, 1, 13),
     (3, 4, 8, 90, 1, 17),
@@ -199,7 +200,7 @@ VALUES
 
 -- Sample data for Quiz table
 INSERT INTO Quiz (id, question, correctAnswer, incorrectAnswers, description)
-VALUES 
+VALUES
     (1, 'What is the largest muscle in the human body?', 'Gluteus Maximus', 'Biceps, Quadriceps, Pectorals', 'The gluteus maximus is the largest muscle in the human body, responsible for movement of the hip and thigh.'),
     (2, 'What type of muscle is the heart?', 'Cardiac muscle', 'Smooth muscle, Skeletal muscle, Voluntary muscle', 'The heart is made of cardiac muscle, which is specialized for continuous rhythmic contractions.'),
     (3, 'Which muscle is primarily worked by doing push-ups?', 'Pectorals', 'Quadriceps, Triceps, Glutes', 'Push-ups primarily target the pectoral muscles, which are located in the chest.'),
