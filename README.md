@@ -1,4 +1,4 @@
-# no-pain-no-main: Revive Service
+# no-pain-no-main: Vigil Service
 
 
 This repo contains the back-end code for our App, which is located
