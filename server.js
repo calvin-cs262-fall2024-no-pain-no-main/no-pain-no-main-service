@@ -252,6 +252,38 @@ const saveWorkout = async (req, res) => {
     }
 };
 
+const deleteWorkout = async (req, res) => {
+    const { workoutId } = req.body;
+
+    try {
+        // Step 1: Delete exercises associated with the workout
+        await pool.query(
+            'DELETE FROM workoutexercises WHERE workoutid = $1',
+            [workoutId]
+        );
+
+        console.log(`Exercises for workout ID ${workoutId} deleted`);
+
+        // Step 2: Delete the workout itself
+        const result = await pool.query(
+            'DELETE FROM workout WHERE id = $1 RETURNING id',
+            [workoutId]
+        );
+
+        if (result.rowCount === 0) {
+            return res.status(404).json({ error: 'Workout not found' });
+        }
+
+        console.log(`Workout with ID ${workoutId} deleted`);
+
+        res.status(200).json({ message: 'Workout deleted successfully', workoutId });
+    } catch (error) {
+        console.error('Error deleting workout:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+};
+
+
 app.get('/', readHelloMessage);
 app.post('/login', loginUser);
 app.post('/signup', signUpUser);
@@ -259,7 +291,8 @@ app.get('/exercises', getAllExercises);
 app.get('/workout:id', getWorkoutTemplate);
 app.get('/workout:id/exerciseData', getWorkoutData);
 app.get('/quizzes', getAllQuizzes);
-app.post('/saveworkout', saveWorkout)
+app.post('/saveworkout', saveWorkout);
+app.delete('/deleteworkout', deleteWorkout);
 
 // Start the server
 app.listen(PORT, () => {
