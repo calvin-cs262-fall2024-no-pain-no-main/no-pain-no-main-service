@@ -28,25 +28,6 @@ const readHelloMessage = (req, res) => {
     res.send('Server is running!');
 };
 
-// Handler to check if a user exists
-// const checkUserExists = async (req, res) => {
-//     const { username, password } = req.body;
-//     console.log("received data", { username, password });
-//     try {
-//         const result = await pool.query(
-//             'SELECT * FROM users WHERE username = $1 AND password = $2',
-//             [username, password]
-//         );
-//         if (result.rows.length > 0) {
-//             res.status(200).json({ exists: true });
-//         } else {
-//             res.status(404).json({ exists: false });
-//         }
-//     } catch (error) {
-//         console.error(error);
-//         res.status(500).json({ error: 'Internal server error' });
-//     }
-// };
 
 // Handler to check if a user exists
 const loginUser = async (req, res) => {
@@ -93,6 +74,40 @@ const loginUser = async (req, res) => {
     }
 };
 
+// const signUpUser = async (req, res) => {
+//     try {
+//         const { username, password } = req.body;
+
+//         console.log("Username:", username);
+//         console.log("Password:", password);
+
+//         // Check if username or password is missing
+//         if (!username || !password) {
+//             return res.status(400).json({ error: 'Username and password are required' });
+//         }
+
+//         // Hash the password
+//         const saltRounds = 10;
+//         const hashedPassword = await bcrypt.hash(password, saltRounds);
+
+//         console.log("Hashed Password:", hashedPassword);
+
+//         // Insert the new user into the database
+//         const result = await pool.query(
+//             `INSERT INTO users (username, password) VALUES ($1, $2) RETURNING users.id, username`,
+//             [username, hashedPassword]
+//         );
+
+//         console.log("Inserted User:", result.rows[0]);
+
+//         // Respond with the user info (excluding the password)
+//         res.status(201).json({ user: result.rows[0] });
+//     } catch (error) {
+//         console.error("Error in signUpUser:", error);
+//         res.status(500).json({ error: 'Internal server error' });
+//     }
+// };
+
 const signUpUser = async (req, res) => {
     try {
         const { username, password } = req.body;
@@ -105,6 +120,16 @@ const signUpUser = async (req, res) => {
             return res.status(400).json({ error: 'Username and password are required' });
         }
 
+        // Check if the username already exists
+        const existingUser = await pool.query(
+            `SELECT * FROM users WHERE username = $1`,
+            [username]
+        );
+
+        if (existingUser.rows.length > 0) {
+            return res.status(400).json({ error: 'Username already exists' });
+        }
+
         // Hash the password
         const saltRounds = 10;
         const hashedPassword = await bcrypt.hash(password, saltRounds);
@@ -113,7 +138,7 @@ const signUpUser = async (req, res) => {
 
         // Insert the new user into the database
         const result = await pool.query(
-            `INSERT INTO users (username, password) VALUES ($1, $2) RETURNING users.id, username`,
+            `INSERT INTO users (username, password) VALUES ($1, $2) RETURNING id, username`,
             [username, hashedPassword]
         );
 
@@ -123,12 +148,17 @@ const signUpUser = async (req, res) => {
         res.status(201).json({ user: result.rows[0] });
     } catch (error) {
         console.error("Error in signUpUser:", error);
+
+        // Handle unique constraint errors if added at the database level
+        if (error.code === '23505') { // PostgreSQL error code for unique violation
+            return res.status(400).json({ error: 'Username already exists' });
+        }
+
         res.status(500).json({ error: 'Internal server error' });
     }
 };
 
 
-// Handler to get all exercises
 const getAllExercises = async (req, res) => {
     try {
         const result = await pool.query('SELECT * FROM exercise');
