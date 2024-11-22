@@ -1,4 +1,5 @@
 DROP TABLE IF EXISTS Quiz;
+DROP TABLE IF EXISTS UserExercises;
 DROP TABLE IF EXISTS WorkoutExercises;
 DROP TABLE IF EXISTS Exercise;
 DROP TABLE IF EXISTS Workout;
@@ -7,11 +8,12 @@ DROP TABLE IF EXISTS Users;
 -- User table
 CREATE TABLE Users (
     id integer PRIMARY KEY,
-    email varchar(50) NOT NULL,
-    password varchar(50) NOT NULL,
+    username varchar(50) NOT NULL,
+    password varchar(255) NOT NULL,
     height integer,
     weight float,
-    experienceType varchar(25)
+    experience_type varchar(25),
+    first_time_user boolean DEFAULT TRUE
 );
 
 -- Workout table
@@ -19,8 +21,8 @@ CREATE TABLE Workout (
     id integer PRIMARY KEY,
     description text,
     name varchar(50),
-    isPublic boolean,
-    UserID integer REFERENCES Users(id)
+    is_public boolean,
+    user_id integer REFERENCES Users(id)
 );
 
 -- Exercise table
@@ -28,43 +30,39 @@ CREATE TABLE Exercise (
     id integer PRIMARY KEY,
     description text,
     name varchar(50),
-    muscleGroup varchar(25)
+    muscle_group varchar(25)
 );
 
 -- WorkoutExercises table (association table between Workout and Exercise)
 CREATE TABLE WorkoutExercises (
     id integer PRIMARY KEY,
-    sets integer,
-    reps integer,
-    restTime integer,
-    ExerciseID integer REFERENCES Exercise(id), 
-    WorkoutID integer REFERENCES Workout(id)
+    sequence_order integer,
+    exercise_id integer REFERENCES Exercise(id), 
+    workout_id integer REFERENCES Workout(id)
 );
 
 -- Quiz table
 CREATE TABLE Quiz (
     id integer PRIMARY KEY,
     question varchar(255),
-    correctAnswer varchar(255),
-    incorrectAnswers varchar(255),
+    correct_answer varchar(255),
+    incorrect_answers varchar(255),
     description text,
 );
 
 
+-- UserExercises table (association table between User and Exercise)
+CREATE TABLE UserExercises
+(
+    id integer PRIMARY KEY,
+    sets JSON[],
+    exercise_id integer REFERENCES Exercise(id),
+    user_id integer REFERENCES Users(id)
+);
 
--- Our data for User table
-INSERT INTO Users (id, username, password, height, weight, experienceType)
-VALUES 
-    (1, 'test@gmail.com', 'demo123', 75.5, 180, 'Intermediate'),
-    (2, 'zmr7@calvin.com', 'zmr7', 76, 190, 'Advanced'),
-    (3, 'bjs55@calvin.edu', 'bjs55', 74, 145, 'Beginner'),
-    (4, 'kdr22@calvin.edu', 'kdr22', 72, 160, 'Intermediate'),
-    (5, 'bak32@calvin.edu', 'bak32', 73, 170, 'Advanced'),
-    (6, 'tld26@calvin.edu', 'tld26', 74, 175, 'Advanced'),
-    (7, 'jk267@calvin.edu', 'jk267', 75, 180, 'Advanced');
 
 -- Our data for the Exercise table
-INSERT INTO Exercise (id, description, name, muscleGroup)
+INSERT INTO Exercise (id, description, name, muscle_group)
 VALUES
     (1, '', 'Barbell Bench Press', 'Chest'),
     (2, '', 'Machine Flys', 'Chest'),
@@ -157,7 +155,7 @@ VALUES
 
 
 -- Our data for the Workout table
-INSERT INTO Workout (id, description, name, isPublic, userId)
+INSERT INTO Workout (id, description, name, is_public, user_id)
 VALUES 
     (1, 'A workout focused on using your pull muscles - biceps, back, and forearms.', 'Pull Day', TRUE, NULL),
     (2, 'A workout focused on using your push muscles - chest, triceps, and shoulders.', 'Push Day', TRUE, NULL),
@@ -166,39 +164,38 @@ VALUES
 
 
 -- Sample data for WorkoutExercises table
-INSERT INTO WorkoutExercises (id, sets, reps, restTime, workoutId, exerciseId)
+INSERT INTO WorkoutExercises (id, workout_id, exercise_id)
 VALUES 
-    (1, 4, 8, 90, 1, 11),
-    (2, 4, 8, 90, 1, 13),
-    (3, 4, 8, 90, 1, 17),
-    (4, 4, 8, 90, 1, 18),
-    (5, 4, 8, 90, 1, 21),
-    (6, 4, 8, 90, 1, 22),
+    (1, 1, 11),
+    (2, 1, 13),
+    (3, 1, 17),
+    (4, 1, 18),
+    (5, 1, 21),
+    (6, 1, 22),
 
-    (7, 4, 8, 90, 2, 1),
-    (8, 4, 8, 90, 2, 2),
-    (9, 4, 8, 90, 2, 7),
-    (10, 4, 8, 90, 2, 8),
-    (11, 4, 8, 90, 2, 27),
-    (12, 4, 8, 90, 2, 30),
+    (7, 2, 1),
+    (8, 2, 2),
+    (9, 2, 7),
+    (10, 2, 8),
+    (11, 2, 27),
+    (12, 2, 30),
 
-    (13, 4, 8, 90, 3, 31),
-    (14, 4, 8, 90, 3, 41),
-    (15, 4, 8, 90, 3, 35),
-    (16, 4, 8, 90, 3, 38),
-    (17, 4, 8, 90, 3, 37),
-    (18, 4, 8, 90, 3, 45),
+    (13, 3, 31),
+    (14, 3, 41),
+    (15, 3, 35),
+    (16, 3, 38),
+    (17, 3, 37),
+    (18, 3, 45),
 
-    (19, 4, 8, 90, 4, 5),
-    (20, 4, 8, 90, 4, 16),
-    (21, 4, 8, 90, 4, 41),
-    (22, 4, 8, 90, 4, 46),
-    (23, 4, 8, 90, 4, 47),
-    (24, 4, 8, 90, 4, 49);
-
+    (19, 4, 5),
+    (20, 4, 16),
+    (21, 4, 41),
+    (22, 4, 46),
+    (23, 4, 47),
+    (24, 4, 49);
 
 -- Sample data for Quiz table
-INSERT INTO Quiz (id, question, correctAnswer, incorrectAnswers, description)
+INSERT INTO Quiz (id, question, correct_answer, incorrect_answers, description)
 VALUES 
     (1, 'What is the largest muscle in the human body?', 'Gluteus Maximus', 'Biceps, Quadriceps, Pectorals', 'The gluteus maximus is the largest muscle in the human body, responsible for movement of the hip and thigh.'),
     (2, 'What type of muscle is the heart?', 'Cardiac muscle', 'Smooth muscle, Skeletal muscle, Voluntary muscle', 'The heart is made of cardiac muscle, which is specialized for continuous rhythmic contractions.'),
@@ -289,41 +286,41 @@ VALUES
 -- Sample Queries
 
 -- 1. Retrieve all users and their workouts
-SELECT u.id, u.email, w.name AS workoutName, w.description, w.isPublic
+SELECT u.id, u.email, w.name AS workout_name, w.description, w.is_public
 FROM Users u
 JOIN Workout w ON u.id = w.id;
 
 -- 2. Find all exercises in a specific workout (e.g., "Push Day")
-SELECT w.name AS workoutName, e.name AS exerciseName, we.sets, we.reps, we.restTime
+SELECT w.name AS workout_name, e.name AS exercise_name, we.sets, we.reps, we.rest_time
 FROM Workout w
 JOIN WorkoutExercises we ON w.id = we.id
 JOIN Exercise e ON we.id = e.id
 WHERE w.name = 'Push Day';
 
 -- 3. Retrieve all quizzes for a specific exercise (e.g., "Push-Up")
-SELECT e.name AS exerciseName, q.question, q.correctAnswer, q.incorrectAnswers
+SELECT e.name AS exercise_name, q.question, q.correct_answer, q.incorrect_answers
 FROM Exercise e
 JOIN Quiz q ON e.id = q.id
 WHERE e.name = 'Push-Up';
 
 -- 4. List all public workouts with their exercises
-SELECT w.name AS workoutName, e.name AS exerciseName, we.sets, we.reps
+SELECT w.name AS workout_name, e.name AS exercise_name, we.sets, we.reps
 FROM Workout w
 JOIN WorkoutExercises we ON w.id = we.id
 JOIN Exercise e ON we.id = e.id
-WHERE w.isPublic = TRUE;
+WHERE w.is_public = TRUE;
 
 -- 5. Get all workouts created by a specific user (e.g., userId = 2)
-SELECT w.name AS workoutName, w.description
+SELECT w.name AS workout_name, w.description
 FROM Workout w
 WHERE w.id = 2;
 
 -- 6. Find all exercises and their muscle groups
-SELECT name AS exerciseName, muscleGroup
+SELECT name AS exercise_name, muscle_group
 FROM Exercise;
 
 -- 7. Retrieve all quiz questions related to "Chest" exercises
-SELECT q.question, q.correctAnswer, q.incorrectAnswers
+SELECT q.question, q.correct_answer, q.incorrect_answers
 FROM Quiz q
 JOIN Exercise e ON q.id = e.id
-WHERE e.muscleGroup = 'Chest';
+WHERE e.muscle_group = 'Chest';
