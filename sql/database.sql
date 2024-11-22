@@ -13,7 +13,7 @@ CREATE TABLE Users (
     height integer,
     weight float,
     experience_type varchar(25),
-    first_time_user boolean DEFAULT TRUE
+    has_logged_in boolean DEFAULT FALSE
 );
 
 -- Workout table

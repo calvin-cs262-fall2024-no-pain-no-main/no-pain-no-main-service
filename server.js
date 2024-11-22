@@ -28,25 +28,6 @@ const readHelloMessage = (req, res) => {
     res.send('Server is running!');
 };
 
-// Handler to check if a user exists
-// const checkUserExists = async (req, res) => {
-//     const { username, password } = req.body;
-//     console.log("received data", { username, password });
-//     try {
-//         const result = await pool.query(
-//             'SELECT * FROM users WHERE username = $1 AND password = $2',
-//             [username, password]
-//         );
-//         if (result.rows.length > 0) {
-//             res.status(200).json({ exists: true });
-//         } else {
-//             res.status(404).json({ exists: false });
-//         }
-//     } catch (error) {
-//         console.error(error);
-//         res.status(500).json({ error: 'Internal server error' });
-//     }
-// };
 
 // Handler to check if a user exists
 const loginUser = async (req, res) => {
@@ -105,6 +86,16 @@ const signUpUser = async (req, res) => {
             return res.status(400).json({ error: 'Username and password are required' });
         }
 
+        // Check if the username already exists
+        const existingUser = await pool.query(
+            `SELECT * FROM users WHERE username = $1`,
+            [username]
+        );
+
+        if (existingUser.rows.length > 0) {
+            return res.status(400).json({ error: 'Username already exists' });
+        }
+
         // Hash the password
         const saltRounds = 10;
         const hashedPassword = await bcrypt.hash(password, saltRounds);
@@ -113,7 +104,7 @@ const signUpUser = async (req, res) => {
 
         // Insert the new user into the database
         const result = await pool.query(
-            `INSERT INTO users (username, password) VALUES ($1, $2) RETURNING users.id, username`,
+            `INSERT INTO users (username, password) VALUES ($1, $2) RETURNING id, username`,
             [username, hashedPassword]
         );
 
@@ -123,12 +114,17 @@ const signUpUser = async (req, res) => {
         res.status(201).json({ user: result.rows[0] });
     } catch (error) {
         console.error("Error in signUpUser:", error);
+
+        // Handle unique constraint errors if added at the database level
+        if (error.code === '23505') { // PostgreSQL error code for unique violation
+            return res.status(400).json({ error: 'Username already exists' });
+        }
+
         res.status(500).json({ error: 'Internal server error' });
     }
 };
 
 
-// Handler to get all exercises
 const getAllExercises = async (req, res) => {
     try {
         const result = await pool.query('SELECT * FROM exercise');
@@ -222,6 +218,38 @@ const saveWorkout = async (req, res) => {
     }
 };
 
+const deleteWorkout = async (req, res) => {
+    const { workoutId } = req.body;
+
+    try {
+        // Step 1: Delete exercises associated with the workout
+        await pool.query(
+            'DELETE FROM workoutexercises WHERE workoutid = $1',
+            [workoutId]
+        );
+
+        console.log(`Exercises for workout ID ${workoutId} deleted`);
+
+        // Step 2: Delete the workout itself
+        const result = await pool.query(
+            'DELETE FROM workout WHERE id = $1 RETURNING id',
+            [workoutId]
+        );
+
+        if (result.rowCount === 0) {
+            return res.status(404).json({ error: 'Workout not found' });
+        }
+
+        console.log(`Workout with ID ${workoutId} deleted`);
+
+        res.status(200).json({ message: 'Workout deleted successfully', workoutId });
+    } catch (error) {
+        console.error('Error deleting workout:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+};
+
+
 app.get('/', readHelloMessage);
 app.post('/login', loginUser);
 app.post('/signup', signUpUser);
@@ -229,7 +257,8 @@ app.get('/exercises', getAllExercises);
 app.get('/workout:id', getWorkoutTemplate);
 app.get('/workout:id/exerciseData', getWorkoutData);
 app.get('/quizzes', getAllQuizzes);
-app.post('/saveworkout', saveWorkout)
+app.post('/saveworkout', saveWorkout);
+app.delete('/deleteworkout', deleteWorkout);
 
 // Start the server
 app.listen(PORT, () => {
