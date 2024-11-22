@@ -74,6 +74,40 @@ const loginUser = async (req, res) => {
     }
 };
 
+// const signUpUser = async (req, res) => {
+//     try {
+//         const { username, password } = req.body;
+
+//         console.log("Username:", username);
+//         console.log("Password:", password);
+
+//         // Check if username or password is missing
+//         if (!username || !password) {
+//             return res.status(400).json({ error: 'Username and password are required' });
+//         }
+
+//         // Hash the password
+//         const saltRounds = 10;
+//         const hashedPassword = await bcrypt.hash(password, saltRounds);
+
+//         console.log("Hashed Password:", hashedPassword);
+
+//         // Insert the new user into the database
+//         const result = await pool.query(
+//             `INSERT INTO users (username, password) VALUES ($1, $2) RETURNING users.id, username`,
+//             [username, hashedPassword]
+//         );
+
+//         console.log("Inserted User:", result.rows[0]);
+
+//         // Respond with the user info (excluding the password)
+//         res.status(201).json({ user: result.rows[0] });
+//     } catch (error) {
+//         console.error("Error in signUpUser:", error);
+//         res.status(500).json({ error: 'Internal server error' });
+//     }
+// };
+
 const signUpUser = async (req, res) => {
     try {
         const { username, password } = req.body;
