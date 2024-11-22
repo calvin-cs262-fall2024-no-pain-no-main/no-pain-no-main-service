@@ -6,7 +6,7 @@ in our [Client Repo](https://github.com/calvin-cs262-fall2024-no-pain-no-main/Cl
 
 Our back-end is hosted at https://no-pain-no-main.azurewebsites.net/
 
-It is based on the Azure App Servcie tutorial [here](https://learn.microsoft.com/en-us/azure/app-service/quickstart-nodejs?tabs=linux&pivots=development-environment-cli)
+It is based on the Azure App Service tutorial [here](https://learn.microsoft.com/en-us/azure/app-service/quickstart-nodejs?tabs=linux&pivots=development-environment-cli)
 
 We have a relational database that is being hosted on [PostgreSQL](https://www.postgresql.org/). Right now, it has minimal functionality, and we aim to make it more robust in the coming sprint.
 
