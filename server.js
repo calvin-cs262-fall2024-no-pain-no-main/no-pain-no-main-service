@@ -74,40 +74,6 @@ const loginUser = async (req, res) => {
     }
 };
 
-// const signUpUser = async (req, res) => {
-//     try {
-//         const { username, password } = req.body;
-
-//         console.log("Username:", username);
-//         console.log("Password:", password);
-
-//         // Check if username or password is missing
-//         if (!username || !password) {
-//             return res.status(400).json({ error: 'Username and password are required' });
-//         }
-
-//         // Hash the password
-//         const saltRounds = 10;
-//         const hashedPassword = await bcrypt.hash(password, saltRounds);
-
-//         console.log("Hashed Password:", hashedPassword);
-
-//         // Insert the new user into the database
-//         const result = await pool.query(
-//             `INSERT INTO users (username, password) VALUES ($1, $2) RETURNING users.id, username`,
-//             [username, hashedPassword]
-//         );
-
-//         console.log("Inserted User:", result.rows[0]);
-
-//         // Respond with the user info (excluding the password)
-//         res.status(201).json({ user: result.rows[0] });
-//     } catch (error) {
-//         console.error("Error in signUpUser:", error);
-//         res.status(500).json({ error: 'Internal server error' });
-//     }
-// };
-
 const signUpUser = async (req, res) => {
     try {
         const { username, password } = req.body;
@@ -220,69 +186,72 @@ const getWorkoutData = async (req, res) => {
 };
 
 const saveWorkout = async (req, res) => {
-    const { name, description, exercises } = req.body;
+    const { name, description, exercises, userId } = req.body;
+    if (!name || !description || !exercises || !userId) {
+        return res.status(400).json({ error: 'Missing required fields' });
+    }
 
     try {
-        // Step 1: Insert the workout and retrieve the new workout ID
+        // Insert workout and get new workout ID
         const workoutResult = await pool.query(
-            'INSERT INTO workout (name, description, ispublic) VALUES ($1, $2, $3) RETURNING id',
-            [name, description, true]
+            'INSERT INTO workout (name, description, is_public, user_id) VALUES ($1, $2, $3, $4) RETURNING id',
+            [name, description, true, userId]
         );
-
         const workoutId = workoutResult.rows[0].id;
 
         console.log(`New workout created with ID: ${workoutId}`);
 
-        // Step 2: Insert exercises with workoutId, handling missing restTime with a default value
-        const workoutExercisesPromises = exercises.map((exercise) => {
-            const { sets, reps, resttime = 60, exerciseid } = exercise; // Default restTime to 60 seconds if not provided
-
+        // Insert into WorkoutExercises
+        const workoutExercisesPromises = exercises.map(({ exercise_id }) => {
             return pool.query(
-                'INSERT INTO workoutexercises (sets, reps, resttime, exerciseid, workoutid) VALUES ($1, $2, $3, $4, $5)',
-                [sets, reps, resttime, exerciseid, workoutId]
+                'INSERT INTO WorkoutExercises (exercise_id, workout_id) VALUES ($1, $2)',
+                [exercise_id, workoutId]
             );
         });
 
-        await Promise.all(workoutExercisesPromises);
+        // Insert into UserWorkoutPerformance
+        const userWorkoutPerformancePromises = exercises.map(({ exercise_id, performanceData }) => {
+            return pool.query(
+                'INSERT INTO UserWorkoutPerformance (user_id, exercise_id, workout_id, performance_data) VALUES ($1, $2, $3, $4)',
+                [userId, exercise_id, workoutId, JSON.stringify(performanceData)]
+            );
+        });
+
+        // Await all promises
+        await Promise.all([...workoutExercisesPromises, ...userWorkoutPerformancePromises]);
 
         res.status(201).json({ message: 'Workout created successfully', workoutId });
     } catch (error) {
         console.error('Error saving workout:', error);
+
+        if (error.code === '23503') { // Foreign key violation
+            return res.status(400).json({ error: 'Invalid user or exercise reference' });
+        }
+
         res.status(500).json({ error: 'Internal server error' });
     }
 };
 
 const deleteWorkout = async (req, res) => {
-    const { workoutId } = req.body;
+    const { userId, workoutId } = req.body; // Ensure the request body includes userId and workoutId
 
     try {
-        // Step 1: Delete exercises associated with the workout
-        await pool.query(
-            'DELETE FROM workoutexercises WHERE workoutid = $1',
-            [workoutId]
-        );
-
-        console.log(`Exercises for workout ID ${workoutId} deleted`);
-
-        // Step 2: Delete the workout itself
+        // Delete the user's workout performance data
         const result = await pool.query(
-            'DELETE FROM workout WHERE id = $1 RETURNING id',
-            [workoutId]
+            'DELETE FROM UserWorkoutPerformance WHERE user_id = $1 AND workout_id = $2',
+            [userId, workoutId]
         );
 
         if (result.rowCount === 0) {
-            return res.status(404).json({ error: 'Workout not found' });
+            return res.status(404).json({ message: 'No workout performance found for the specified user and workout' });
         }
 
-        console.log(`Workout with ID ${workoutId} deleted`);
-
-        res.status(200).json({ message: 'Workout deleted successfully', workoutId });
+        res.status(200).json({ message: 'Workout performance deleted successfully' });
     } catch (error) {
-        console.error('Error deleting workout:', error);
+        console.error('Error deleting workout performance:', error);
         res.status(500).json({ error: 'Internal server error' });
     }
 };
-
 
 app.get('/', readHelloMessage);
 app.post('/login', loginUser);

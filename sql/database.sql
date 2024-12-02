@@ -1,5 +1,5 @@
 DROP TABLE IF EXISTS Quiz;
-DROP TABLE IF EXISTS UserExercises;
+DROP TABLE IF EXISTS UserWorkoutPerformance;
 DROP TABLE IF EXISTS WorkoutExercises;
 DROP TABLE IF EXISTS Exercise;
 DROP TABLE IF EXISTS Workout;
@@ -7,8 +7,8 @@ DROP TABLE IF EXISTS Users;
 
 -- User table
 CREATE TABLE Users (
-    id integer PRIMARY KEY,
-    username varchar(50) NOT NULL,
+    id integer GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    username varchar(50) NOT NULL UNIQUE,
     password varchar(255) NOT NULL,
     height integer,
     weight float,
@@ -18,7 +18,7 @@ CREATE TABLE Users (
 
 -- Workout table
 CREATE TABLE Workout (
-    id integer PRIMARY KEY,
+    id integer GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     description text,
     name varchar(50),
     is_public boolean,
@@ -34,11 +34,19 @@ CREATE TABLE Exercise (
 );
 
 -- WorkoutExercises table (association table between Workout and Exercise)
+-- ex: if a user creates a workout with 3 exercises, 3 rows will be added to this table
 CREATE TABLE WorkoutExercises (
-    id integer PRIMARY KEY,
-    sequence_order integer,
-    exercise_id integer REFERENCES Exercise(id), 
+    id integer GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    exercise_id integer REFERENCES Exercise(id),
     workout_id integer REFERENCES Workout(id)
+);
+
+CREATE TABLE UserWorkoutPerformance(
+    id integer GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    user_id integer REFERENCES Users(id),
+    exercise_id integer REFERENCES Exercise(id),
+    workout_id integer REFERENCES Workout(id),
+    performance_data JSONB
 );
 
 -- Quiz table
@@ -47,17 +55,7 @@ CREATE TABLE Quiz (
     question varchar(255),
     correct_answer varchar(255),
     incorrect_answers varchar(255),
-    description text,
-);
-
-
--- UserExercises table (association table between User and Exercise)
-CREATE TABLE UserExercises
-(
-    id integer PRIMARY KEY,
-    sets JSON[],
-    exercise_id integer REFERENCES Exercise(id),
-    user_id integer REFERENCES Users(id)
+    description text
 );
 
 
@@ -155,48 +153,48 @@ VALUES
 
 
 -- Our data for the Workout table
-INSERT INTO Workout (id, description, name, is_public, user_id)
-VALUES 
-    (1, 'A workout focused on using your pull muscles - biceps, back, and forearms.', 'Pull Day', TRUE, NULL),
-    (2, 'A workout focused on using your push muscles - chest, triceps, and shoulders.', 'Push Day', TRUE, NULL),
-    (3, 'A workout focused on using you legs - quadriceps, hamstrings, glutes, and calves.', 'Leg Day', TRUE, NULL),
-    (4, 'A workout focused for beginners , using no weights and only bodyweight exercises.', 'Bodyweight', TRUE, NULL);
+INSERT INTO Workout ( description, name, is_public, user_id)
+VALUES
+    ('A workout focused on using your pull muscles - biceps, back, and forearms.', 'Pull Day', TRUE, NULL),
+    ('A workout focused on using your push muscles - chest, triceps, and shoulders.', 'Push Day', TRUE, NULL),
+    ('A workout focused on using you legs - quadriceps, hamstrings, glutes, and calves.', 'Leg Day', TRUE, NULL),
+    ('A workout focused for beginners , using no weights and only bodyweight exercises.', 'Bodyweight', TRUE, NULL);
 
 
 -- Sample data for WorkoutExercises table
-INSERT INTO WorkoutExercises (id, workout_id, exercise_id)
-VALUES 
-    (1, 1, 11),
-    (2, 1, 13),
-    (3, 1, 17),
-    (4, 1, 18),
-    (5, 1, 21),
-    (6, 1, 22),
+INSERT INTO WorkoutExercises (workout_id, exercise_id)
+VALUES
+    (1, 11),
+    (1, 13),
+    (1, 17),
+    (1, 18),
+    (1, 21),
+    (1, 22),
 
-    (7, 2, 1),
-    (8, 2, 2),
-    (9, 2, 7),
-    (10, 2, 8),
-    (11, 2, 27),
-    (12, 2, 30),
+    (2, 1),
+    (2, 2),
+    (2, 7),
+    (2, 8),
+    (2, 27),
+    (2, 30),
 
-    (13, 3, 31),
-    (14, 3, 41),
-    (15, 3, 35),
-    (16, 3, 38),
-    (17, 3, 37),
-    (18, 3, 45),
+    (3, 31),
+    (3, 41),
+    (3, 35),
+    (3, 38),
+    (3, 37),
+    (3, 45),
 
-    (19, 4, 5),
-    (20, 4, 16),
-    (21, 4, 41),
-    (22, 4, 46),
-    (23, 4, 47),
-    (24, 4, 49);
+    (4, 5),
+    (4, 16),
+    (4, 41),
+    (4, 46),
+    (4, 47),
+    (4, 49);
 
 -- Sample data for Quiz table
 INSERT INTO Quiz (id, question, correct_answer, incorrect_answers, description)
-VALUES 
+VALUES
     (1, 'What is the largest muscle in the human body?', 'Gluteus Maximus', 'Biceps, Quadriceps, Pectorals', 'The gluteus maximus is the largest muscle in the human body, responsible for movement of the hip and thigh.'),
     (2, 'What type of muscle is the heart?', 'Cardiac muscle', 'Smooth muscle, Skeletal muscle, Voluntary muscle', 'The heart is made of cardiac muscle, which is specialized for continuous rhythmic contractions.'),
     (3, 'Which muscle is primarily worked by doing push-ups?', 'Pectorals', 'Quadriceps, Triceps, Glutes', 'Push-ups primarily target the pectoral muscles, which are located in the chest.'),
