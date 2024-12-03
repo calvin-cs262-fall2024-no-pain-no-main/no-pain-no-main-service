@@ -146,14 +146,13 @@ const getAllQuizzes = async (req, res) => {
     }
 };
 
-
 const getWorkoutTemplate = async (req, res) => {
     try {
         // Parse the id from req.params and convert it to an integer
         const id = parseInt(req.params.id, 10);
 
         // Query the workout based on the id and ispublic status
-        const result = await pool.query("SELECT * FROM workout WHERE ispublic = true AND id = $1", [id]);
+        const result = await pool.query("SELECT * FROM workout WHERE is_public = true AND id = $1", [id]);
 
         // Check if a workout was found and return the result
         if (result.rows.length > 0) {
@@ -174,8 +173,8 @@ const getWorkoutData = async (req, res) => {
         const result = await pool.query(
             `SELECT exercise.*, workoutexercises.*
              FROM workoutexercises
-             JOIN exercise ON workoutexercises.exerciseid = exercise.id
-             WHERE workoutexercises.workoutid = $1`, [id]
+             JOIN exercise ON workoutexercises.exercise_id = exercise.id
+             WHERE workoutexercises.workout_id = $1`, [id]
         );
 
         res.status(200).json(result.rows);
@@ -253,14 +252,69 @@ const deleteWorkout = async (req, res) => {
     }
 };
 
+const getCustomWorkouts = async (req, res) => {
+    const userId = req.params.id; // Extract id from the URL parameter
+
+    if (!userId) {
+        return res.status(400).json({ error: 'User ID is required' });
+    }
+
+    try {
+        // Step 1: Get all workouts for the user
+        const workoutsResult = await pool.query(
+            `SELECT w.id, w.name, w.description, w.is_public
+             FROM workout w
+             WHERE w.user_id = $1`,
+            [userId]
+        );
+
+        const workouts = workoutsResult.rows;
+
+        if (workouts.length === 0) {
+            return res.status(404).json({ message: 'No workouts found for the user' });
+        }
+
+        // Step 2: Get performance data for each workout
+        const workoutIds = workouts.map(workout => workout.id);
+        const performanceResult = await pool.query(
+            `SELECT uwp.workout_id, uwp.exercise_id, uwp.performance_data
+             FROM UserWorkoutPerformance uwp
+             WHERE uwp.user_id = $1 AND uwp.workout_id = ANY($2::int[])`,
+            [userId, workoutIds]
+        );
+
+        const performanceData = performanceResult.rows;
+
+        // Step 3: Attach performance data to each workout
+        const workoutsWithPerformance = workouts.map(workout => {
+            const performance = performanceData.filter(
+                pd => pd.workout_id === workout.id
+            );
+            return {
+                ...workout,
+                exercises: performance.map(pd => ({
+                    exercise_id: pd.exercise_id,
+                    performance_data: pd.performance_data
+                }))
+            };
+        });
+
+        res.status(200).json(workoutsWithPerformance);
+    } catch (error) {
+        console.error('Error fetching user workouts:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+};
+
 app.get('/', readHelloMessage);
 app.post('/login', loginUser);
 app.post('/signup', signUpUser);
 app.get('/exercises', getAllExercises);
-app.get('/workout:id', getWorkoutTemplate);
+app.get('/templateworkout:id', getWorkoutTemplate);
 app.get('/workout:id/exerciseData', getWorkoutData);
 app.get('/quizzes', getAllQuizzes);
 app.post('/saveworkout', saveWorkout);
+app.get('/customworkout:id', getCustomWorkouts);
 app.delete('/deleteworkout', deleteWorkout);
 
 // Start the server
