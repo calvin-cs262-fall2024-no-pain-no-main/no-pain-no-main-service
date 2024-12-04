@@ -49,6 +49,10 @@ CREATE TABLE UserWorkoutPerformance(
     performance_data JSONB
 );
 
+ALTER TABLE UserWorkoutPerformance
+ADD CONSTRAINT unique_user_exercise_workout
+UNIQUE (user_id, exercise_id, workout_id);
+
 -- Quiz table
 CREATE TABLE Quiz (
     id integer PRIMARY KEY,
