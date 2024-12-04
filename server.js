@@ -28,7 +28,6 @@ const readHelloMessage = (req, res) => {
     res.send('Server is running!');
 };
 
-
 // Handler to check if a user exists
 const loginUser = async (req, res) => {
     try {
