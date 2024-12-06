@@ -18,7 +18,7 @@ const pool = new Pool({
     ssl: { rejectUnauthorized: false },
 });
 
-const { loginUser, signUpUser, getUserMetrics, updateUserMetrics } = require('./api/userFunctions');
+const { loginUser, signUpUser, getUserMetrics, updateUserMetrics, hasUserLoggedIn, updateFirstLogin } = require('./api/userFunctions');
 const { saveWorkout, deleteWorkout, getCustomWorkouts, updateExerciseData } = require('./api/customWorkoutFunctions');
 const { getAllExercises, getWorkoutTemplate, getWorkoutData } = require('./api/defaultWorkoutFunctions');
 const { getAllQuizzes } = require('./api/quizFunctions');
@@ -48,8 +48,14 @@ app.post('/saveworkout', saveWorkout);
 app.put('/updateuserexercise', updateExerciseData);
 app.delete('/deleteworkout', deleteWorkout);
 
+//get and update the user metrics (height, weight, and experience)
 app.put('/setmetrics:id', updateUserMetrics);
 app.get('/getmetrics:id', getUserMetrics);
+
+//get and update the logged-in value, so the wizard can be displayed or not
+app.get('/hasuserloggedin:id', hasUserLoggedIn);
+app.put('/loginfirsttime:id', updateFirstLogin);
+
 
 
 // Start the server
