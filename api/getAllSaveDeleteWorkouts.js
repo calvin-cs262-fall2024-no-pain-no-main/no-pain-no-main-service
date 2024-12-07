@@ -18,7 +18,10 @@ const pool = new Pool({
     ssl: { rejectUnauthorized: false },
 });
 
-
+//This function saves a workout, where a name, description, exercises, and the user id associated with creating the workout are needed.
+//A row in the workout table is added.
+//Rows in the workoutexercise table are added, that contain the exercises in that workout
+//Rows in userworkout performance are added so the sets, reps, and weight can be saved for that particular user
 const saveWorkout = async (req, res) => {
     const { name, description, exercises, userId } = req.body;
     if (!name || !description || !exercises || !userId) {
@@ -66,7 +69,8 @@ const saveWorkout = async (req, res) => {
     }
 };
 
-
+//deletes the corresponding workout, the workout_id and user_id are necessary for this.
+//must delete foreign key entries in userworkoutperformance, workout exercises, and finally the workout table
 const deleteWorkout = async (req, res) => {
     const { workoutId, userId } = req.body; // Expect workoutId and userId in the request body
 
@@ -116,7 +120,7 @@ const deleteWorkout = async (req, res) => {
     }
 };
 
-
+//get all custom workouts that the user created (this is very similar to )
 const getCustomWorkouts = async (req, res) => {
     const userId = req.params.id; // Extract id from the URL parameter
 
@@ -171,93 +175,4 @@ const getCustomWorkouts = async (req, res) => {
     }
 };
 
-const updateExerciseData = async (req, res) => {
-    const { user_id, workout_id, exercise_id, operation, set_number, reps, weight } = req.body;
-
-    if (!user_id || !workout_id || !exercise_id || !operation) {
-        return res.status(400).json({ message: "Missing required parameters" });
-    }
-
-    try {
-        // Get the current performance data
-        const result = await pool.query(
-            `SELECT performance_data
-            FROM UserWorkoutPerformance
-            WHERE user_id = $1 AND workout_id = $2 AND exercise_id = $3`,
-            [user_id, workout_id, exercise_id]
-        );
-
-        if (result.rows.length === 0) {
-            return res.status(404).json({ message: "No performance data found for this user, exercise, and workout." });
-        }
-
-        let performance_data = result.rows[0].performance_data;
-
-        // Perform the operation based on the type
-        switch (operation) {
-            case 'add_set':
-                if (!set_number || !reps || !weight) {
-                    return res.status(400).json({ message: "Missing set_number, reps, or weight for add_set operation" });
-                }
-                // Add a new set
-                performance_data = {
-                    ...performance_data,
-                    sets: [
-                        ...performance_data.sets,
-                        { set: set_number, reps, weight }
-                    ]
-                };
-                break;
-
-            case 'delete_set':
-                if (!set_number) {
-                    return res.status(400).json({ message: "Missing set_number for delete_set operation" });
-                }
-                // Delete the set by filtering out the specified set_number
-                performance_data = {
-                    ...performance_data,
-                    sets: performance_data.sets.filter(set => set.set !== set_number)
-                };
-                break;
-
-            case 'update_set':
-                if (!set_number || (reps === undefined && weight === undefined)) {
-                    return res.status(400).json({ message: "Missing set_number, reps or weight for update_set operation" });
-                }
-                // Update a set (modify reps or weight based on input)
-                performance_data = {
-                    ...performance_data,
-                    sets: performance_data.sets.map(set => {
-                        if (set.set === set_number) {
-                            return {
-                                ...set,
-                                reps: reps !== undefined ? reps : set.reps,
-                                weight: weight !== undefined ? weight : set.weight
-                            };
-                        }
-                        return set;
-                    })
-                };
-                break;
-
-            default:
-                return res.status(400).json({ message: "Invalid operation. Allowed operations: add_set, delete_set, update_set." });
-        }
-
-        // Update the performance data in the database
-        await pool.query(
-            `UPDATE UserWorkoutPerformance
-            SET performance_data = $1
-            WHERE user_id = $2 AND workout_id = $3 AND exercise_id = $4`,
-            [performance_data, user_id, workout_id, exercise_id]
-        );
-
-        return res.status(200).json({ message: "Performance data updated successfully", performance_data });
-
-    } catch (error) {
-        console.error("Error updating performance data:", error);
-        return res.status(500).json({ message: "Internal server error" });
-    }
-};
-
-module.exports = { saveWorkout, deleteWorkout, getCustomWorkouts, updateExerciseData };
+module.exports = { saveWorkout, deleteWorkout, getCustomWorkouts };
