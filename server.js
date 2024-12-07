@@ -21,7 +21,7 @@ const pool = new Pool({
 const { loginUser, signUpUser, hasUserLoggedIn, updateFirstLogin } = require('./api/SignupLogin');
 const { getUserMetrics, updateUserMetrics } = require('./api/userMetrics');
 
-const { saveWorkout, deleteWorkout, getCustomWorkouts, updateExerciseData } = require('./api/getAllSaveDeleteWorkouts');
+const { saveWorkout, deleteWorkout, getCustomWorkouts } = require('./api/getAllSaveDeleteWorkouts');
 const { getAllExercises, getWorkoutTemplate, getExercisesInAWorkout } = require('./api/getExercises');
 const { getAllQuizzes } = require('./api/quizFunctions');
 const { addSetToExercise, deleteSetFromExercise, updateSet } = require('./api/addUpdateDeleteSets');
@@ -56,9 +56,6 @@ app.get('/workout:id/exerciseData', getExercisesInAWorkout);
 app.get('/customworkout:id', getCustomWorkouts); //ID is the user's id
 app.post('/saveworkout', saveWorkout);
 app.delete('/deleteworkout', deleteWorkout);
-
-//#FIXME -- delete this endpoint, it does not work!
-app.put('/updateuserexercise', updateExerciseData);
 
 //get and update the user metrics (height, weight, and experience)
 app.put('/setmetrics:id', updateUserMetrics);
