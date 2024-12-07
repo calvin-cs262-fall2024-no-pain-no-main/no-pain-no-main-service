@@ -18,7 +18,10 @@ const pool = new Pool({
     ssl: { rejectUnauthorized: false },
 });
 
-
+//This function saves a workout, where a name, description, exercises, and the user id associated with creating the workout are needed.
+//A row in the workout table is added.
+//Rows in the workoutexercise table are added, that contain the exercises in that workout
+//Rows in userworkout performance are added so the sets, reps, and weight can be saved for that particular user
 const saveWorkout = async (req, res) => {
     const { name, description, exercises, userId } = req.body;
     if (!name || !description || !exercises || !userId) {
@@ -66,7 +69,8 @@ const saveWorkout = async (req, res) => {
     }
 };
 
-
+//deletes the corresponding workout, the workout_id and user_id are necessary for this.
+//must delete foreign key entries in userworkoutperformance, workout exercises, and finally the workout table
 const deleteWorkout = async (req, res) => {
     const { workoutId, userId } = req.body; // Expect workoutId and userId in the request body
 
@@ -116,7 +120,7 @@ const deleteWorkout = async (req, res) => {
     }
 };
 
-
+//get all custom workouts that the user created (this is very similar to )
 const getCustomWorkouts = async (req, res) => {
     const userId = req.params.id; // Extract id from the URL parameter
 

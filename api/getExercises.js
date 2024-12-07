@@ -19,6 +19,8 @@ const pool = new Pool({
 });
 
 
+//get all exercises that we have saved in the database, then the user can
+//search for exercises to add to their workout
 const getAllExercises = async (req, res) => {
     try {
         const result = await pool.query('SELECT * FROM exercise');
@@ -29,6 +31,10 @@ const getAllExercises = async (req, res) => {
     }
 };
 
+
+// this function returns the default workouts, but has since become depricated
+//because of the new function getCustomWorkouts
+// DO NOT DELETE -- it is still being used in some cases
 const getWorkoutTemplate = async (req, res) => {
     try {
         // Parse the id from req.params and convert it to an integer
@@ -49,7 +55,10 @@ const getWorkoutTemplate = async (req, res) => {
     }
 };
 
-const getWorkoutData = async (req, res) => {
+//the ID of the workout is sent in the URL and it
+//returns a list of exercises in the workout.
+//the name, description, muscle group, workout_id, and exercise_id are returned
+const getExercisesInAWorkout = async (req, res) => {
     try {
         const id = parseInt(req.params.id, 10);
 
@@ -67,4 +76,4 @@ const getWorkoutData = async (req, res) => {
     }
 };
 
-module.exports = { getAllExercises, getWorkoutTemplate, getWorkoutData };
+module.exports = { getAllExercises, getWorkoutTemplate, getExercisesInAWorkout };
