@@ -22,6 +22,7 @@ const { loginUser, signUpUser, getUserMetrics, updateUserMetrics, hasUserLoggedI
 const { saveWorkout, deleteWorkout, getCustomWorkouts, updateExerciseData } = require('./api/customWorkoutFunctions');
 const { getAllExercises, getWorkoutTemplate, getWorkoutData } = require('./api/defaultWorkoutFunctions');
 const { getAllQuizzes } = require('./api/quizFunctions');
+const { addSetToExercise, deleteSetFromExercise } = require('./api/updateCustomWorkoutFunctions');
 
 
 app.use(express.json());
@@ -55,6 +56,9 @@ app.get('/getmetrics:id', getUserMetrics);
 //get and update the logged-in value, so the wizard can be displayed or not
 app.get('/hasuserloggedin:id', hasUserLoggedIn);
 app.put('/loginfirsttime:id', updateFirstLogin);
+
+app.put('/addsettoexercise', addSetToExercise);
+app.put('/deletesetfromexercise', deleteSetFromExercise); //this is a PUT because we are just updating, not deleting any rows
 
 
 
