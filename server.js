@@ -65,8 +65,8 @@ app.put('/setmetrics:id', updateUserMetrics);
 app.get('/getmetrics:id', getUserMetrics);
 
 //add and delete sets to an exercise
+//the 'delete' route below is a PUT because we are just updating the field, not deleting any rows
 app.put('/addsettoexercise', addSetToExercise);
-//the route below is a PUT because we are just updating the field, not deleting any rows
 app.put('/deletesetfromexercise', deleteSetFromExercise);
 app.put('/updateset', updateSet);
 
