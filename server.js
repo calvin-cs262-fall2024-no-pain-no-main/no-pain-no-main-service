@@ -19,12 +19,15 @@ const pool = new Pool({
 });
 
 const { loginUser, signUpUser, hasUserLoggedIn, updateFirstLogin } = require('./api/SignupLogin');
-const { getUserMetrics, updateUserMetrics } = require('./api/userMetrics');
+const { getUserMetrics, updateUserMetrics, deleteUserAccount } = require('./api/userMetrics');
 
 const { saveWorkout, deleteWorkout, getCustomWorkouts } = require('./api/getAllSaveDeleteWorkouts');
 const { getAllExercises, getWorkoutTemplate, getExercisesInAWorkout } = require('./api/getExercises');
 const { getAllQuizzes } = require('./api/quizFunctions');
 const { addSetToExercise, deleteSetFromExercise, updateSet } = require('./api/addUpdateDeleteSets');
+const { updateMainWorkoutTable } = require('./api/updateWorkoutProfile');
+const { deleteExerciseFromWorkout, addExerciseToWorkout } = require('./api/deleteAddExercise');
+
 
 app.use(express.json());
 app.use(cors({ origin: '*' })); // Adjust CORS settings as needed
@@ -33,7 +36,6 @@ app.use(cors({ origin: '*' })); // Adjust CORS settings as needed
 const readHelloMessage = (req, res) => {
     res.send('Server is running!');
 };
-
 
 app.get('/', readHelloMessage);
 //functions to handle logging in a user, and signing them up
@@ -60,6 +62,7 @@ app.delete('/deleteworkout', deleteWorkout);
 //get and update the user metrics (height, weight, and experience)
 app.put('/setmetrics:id', updateUserMetrics);
 app.get('/getmetrics:id', getUserMetrics);
+app.delete('/deleteuser', deleteUserAccount);
 
 //add and delete sets to an exercise
 //the 'delete' route below is a PUT because we are just updating the field, not deleting any rows
@@ -67,6 +70,12 @@ app.put('/addsettoexercise', addSetToExercise);
 app.put('/deletesetfromexercise', deleteSetFromExercise);
 app.put('/updateset', updateSet);
 
+//change the name or description of a workout
+app.put('/updateworkoutprofile', updateMainWorkoutTable);
+
+//add and delete an exercise in a workout
+app.post('/addexercisetoworkout', addExerciseToWorkout);
+app.delete('/deleteexercisefromworkout', deleteExerciseFromWorkout);
 
 
 

@@ -97,4 +97,63 @@ const getUserMetrics = async (req, res) => {
     }
 };
 
-module.exports = { getUserMetrics, updateUserMetrics };
+const deleteUserAccount = async (req, res) => {
+    try {
+        const { user_id } = req.body;
+
+        // Start a transaction to ensure all deletions are atomic
+        await pool.query('BEGIN');
+
+        // Step 1: Delete from UserWorkoutPerformance
+        await pool.query(
+            `DELETE FROM UserWorkoutPerformance
+             WHERE user_id = $1`,
+            [user_id]
+        );
+
+        // Step 2: Get all workout IDs associated with the user
+        const workoutIdsResult = await pool.query(
+            `SELECT id FROM Workout
+             WHERE user_id = $1`,
+            [user_id]
+        );
+        const workoutIds = workoutIdsResult.rows.map(row => row.id);
+
+        if (workoutIds.length > 0) {
+            // Step 3: Delete from WorkoutExercises for the user's workouts
+            await pool.query(
+                `DELETE FROM WorkoutExercises
+                 WHERE workout_id = ANY($1::int[])`,
+                [workoutIds]
+            );
+
+            // Step 4: Delete the user's workouts from Workout
+            await pool.query(
+                `DELETE FROM Workout
+                 WHERE id = ANY($1::int[])`,
+                [workoutIds]
+            );
+        }
+
+        // Step 5: Delete the user from Users
+        await pool.query(
+            `DELETE FROM Users
+             WHERE id = $1`,
+            [user_id]
+        );
+
+        // Commit the transaction
+        await pool.query('COMMIT');
+
+        res.status(200).json({ message: 'User account and associated data successfully deleted.' });
+    } catch (error) {
+        // Rollback in case of error
+        await pool.query('ROLLBACK');
+        console.error('Error deleting user account:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+};
+
+
+
+module.exports = { getUserMetrics, updateUserMetrics, deleteUserAccount };
