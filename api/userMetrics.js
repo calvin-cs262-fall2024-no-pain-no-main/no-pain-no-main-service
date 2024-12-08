@@ -20,8 +20,7 @@ const pool = new Pool({
 
 const updateUserMetrics = async (req, res) => {
     try {
-        const { id } = req.params; // Assume the ID is passed as a route parameter
-        const { height, weight, experience_type } = req.body;
+        const { id, height, weight, experience_type } = req.body;
 
         console.log("Updating User ID:", id);
         console.log("New Metrics:", { height, weight, experience_type });
@@ -78,7 +77,7 @@ const updateUserMetrics = async (req, res) => {
 
 const getUserMetrics = async (req, res) => {
     try {
-        const { id } = req.params;
+        const { id } = req.body;
 
         // Query to get the user's metrics
         const result = await pool.query(

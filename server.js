@@ -60,8 +60,8 @@ app.post('/saveworkout', saveWorkout);
 app.delete('/deleteworkout', deleteWorkout);
 
 //get and update the user metrics (height, weight, and experience)
-app.put('/setmetrics:id', updateUserMetrics);
-app.get('/getmetrics:id', getUserMetrics);
+app.put('/setmetrics', updateUserMetrics);
+app.get('/getmetrics', getUserMetrics);
 app.delete('/deleteuser', deleteUserAccount);
 
 //add and delete sets to an exercise
