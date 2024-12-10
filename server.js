@@ -20,13 +20,13 @@ const pool = new Pool({
 
 const { loginUser, signUpUser, hasUserLoggedIn, updateFirstLogin } = require('./api/SignupLogin');
 const { getUserMetrics, updateUserMetrics, deleteUserAccount } = require('./api/userMetrics');
-
+const { addSetToExercise, deleteSetFromExercise, updateSet } = require('./api/addUpdateDeleteSets');
 const { saveWorkout, deleteWorkout, getCustomWorkouts } = require('./api/getAllSaveDeleteWorkouts');
 const { getAllExercises, getWorkoutTemplate, getExercisesInAWorkout } = require('./api/getExercises');
-const { getAllQuizzes } = require('./api/quizFunctions');
-const { addSetToExercise, deleteSetFromExercise, updateSet } = require('./api/addUpdateDeleteSets');
-const { updateMainWorkoutTable } = require('./api/updateWorkoutProfile');
 const { deleteExerciseFromWorkout, addExerciseToWorkout } = require('./api/deleteAddExercise');
+const { updateMainWorkoutTable } = require('./api/updateWorkoutProfile');
+const { getAllQuizzes } = require('./api/quizFunctions');
+
 
 
 app.use(express.json());
