@@ -23,16 +23,21 @@ const pool = new Pool({
 //Rows in the workoutexercise table are added, that contain the exercises in that workout
 //Rows in userworkout performance are added so the sets, reps, and weight can be saved for that particular user
 const saveWorkout = async (req, res) => {
-    const { name, description, exercises, userId } = req.body;
+    const { name, description, exercises, userId, isPublic } = req.body;
+
+    // Validate required fields
     if (!name || !description || !exercises || !userId) {
         return res.status(400).json({ error: 'Missing required fields' });
     }
 
     try {
+        // Determine the value for is_public
+        const isPublicValue = typeof isPublic === 'boolean' ? isPublic : false; // Default to false if not provided
+
         // Insert workout and get new workout ID
         const workoutResult = await pool.query(
             'INSERT INTO workout (name, description, is_public, user_id) VALUES ($1, $2, $3, $4) RETURNING id',
-            [name, description, true, userId]
+            [name, description, isPublicValue, userId]
         );
         const workoutId = workoutResult.rows[0].id;
 
@@ -133,7 +138,8 @@ const getCustomWorkouts = async (req, res) => {
         const workoutsResult = await pool.query(
             `SELECT w.id, w.name, w.description, w.is_public
              FROM workout w
-             WHERE w.user_id = $1`,
+             WHERE w.user_id = $1
+             ORDER BY w.id ASC`,
             [userId]
         );
 
@@ -148,7 +154,8 @@ const getCustomWorkouts = async (req, res) => {
         const performanceResult = await pool.query(
             `SELECT uwp.workout_id, uwp.exercise_id, uwp.performance_data
              FROM UserWorkoutPerformance uwp
-             WHERE uwp.user_id = $1 AND uwp.workout_id = ANY($2::int[])`,
+             WHERE uwp.user_id = $1 AND uwp.workout_id = ANY($2::int[])
+             ORDER BY uwp.workout_id ASC`,
             [userId, workoutIds]
         );
 
