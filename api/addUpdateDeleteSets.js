@@ -25,7 +25,7 @@ const addSetToExercise = async (req, res) => {
     try {
         const { user_id, exercise_id, workout_id, reps, weight } = req.body;
 
-        if (!user_id || !exercise_id || !workout_id || !reps || !weight) {
+        if (!user_id || !exercise_id || !workout_id || (reps === undefined) || (weight === undefined)) {
             return res.status(400).json({ error: "Missing required fields." });
         }
 
