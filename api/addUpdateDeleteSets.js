@@ -1,9 +1,37 @@
+/*
+This module contains route hander functions that are required for the API endpoints that are
+defined in server.js
+
+The functions defined in this module are:
+
+1) addSetToExercise
+    Parameters in payload: user id, workout id, exercise id, reps, weight
+
+    This function adds a set to an exercise, and is called when the user clicks the "add set" button
+    The performance_data in the userworkoutperformance table is modified to accomodate this change
+
+2) deleteSetFromExercise
+    Parameters in payload: user id, workout id, exercise id, set number
+
+    Removes the set from the list of sets, and if the set is not the last set of the exercise,
+    subsequent set numbers are changed to maintain sequence (ex. if there are sets 1-4 and set 2 is removed,
+    the remaining sets are numbered 1, 2, and 3)
+
+3) updateSet
+    Parameters in payload: user id, exercise id, workout id, set number,
+    optional Parameters: reps, weight
+
+    Updates the reps, weight, or both of a set if the user decides to change either of these values
+
+
+*/
+
+
 //3) delete exercise from a workout
 const express = require('express');
 const cors = require('cors');
 const { Pool } = require('pg');
 const dotenv = require('dotenv');
-// const bcrypt = require('bcrypt');
 
 dotenv.config();
 
@@ -82,9 +110,9 @@ const deleteSetFromExercise = async (req, res) => {
         `;
         const resultFetch = await pool.query(queryFetch, [user_id, exercise_id, workout_id]);
 
-        if (resultFetch.rows.length === 0) {
-            return res.status(404).json({ error: "Record not found." });
-        }
+        // if (resultFetch.rows.length === 0) {
+        //     return res.status(404).json({ error: "Record not found." });
+        // }
 
         const performanceData = resultFetch.rows[0].performance_data;
 
