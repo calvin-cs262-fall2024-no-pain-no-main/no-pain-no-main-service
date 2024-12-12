@@ -1,3 +1,12 @@
+/**
+ * This module defines functions for managing users' workouts. The users need a way to be able to save,
+ * delete, and get their workouts.
+ *
+ * The functions defined in this module are:
+ * 1)saveWorkout
+ * 2)deleteWorkout
+ * 3)getCustomWorkout
+ */
 const express = require('express');
 const cors = require('cors');
 const { Pool } = require('pg');
@@ -18,10 +27,31 @@ const pool = new Pool({
     ssl: { rejectUnauthorized: false },
 });
 
-//This function saves a workout, where a name, description, exercises, and the user id associated with creating the workout are needed.
-//A row in the workout table is added.
-//Rows in the workoutexercise table are added, that contain the exercises in that workout
-//Rows in userworkout performance are added so the sets, reps, and weight can be saved for that particular user
+/**
+ * This function saves a user's workout in the database, allowing them to have the opportunity to reuse the workout
+ * @async
+ * @param {req.body.name} - the name of the workout
+ * @param {req.body.description} - the description of the workout
+ * @param {req.body.exercises} - the list of exercises that are being saved
+ * @param {req.body.userId} - the user ID of the user who created the workout
+ * @param {req.body.isPublic} - optional: defines if the workout is public to other users who may want to
+ * use the same workout(this feature is not yet implemented in the client, default is false)
+ *
+ * @returns {Promise<void>} - responds with a message saying the workout has been created, or an error
+ *
+ * @example - the payload for the corresponding HTTP POST command:
+ * '{
+ *   "name": "Full Body Workout",
+ *   "description": "A complete workout for all muscle groups.",
+ *   "exercises": [
+ *       { "exercise_id": 1, "performanceData": { "sets": [ { "set": 1, "reps": 10, "weight": 50 } ] } },
+ *       { "exercise_id": 2, "performanceData": { "sets": [ { "set": 1, "reps": 12, "weight": 40 } ] } }
+ *   ],
+ *   "userId": 48,
+ *   "isPublic": true
+ *}'
+ *
+ */
 const saveWorkout = async (req, res) => {
     const { name, description, exercises, userId, isPublic } = req.body;
 
@@ -74,8 +104,23 @@ const saveWorkout = async (req, res) => {
     }
 };
 
-//deletes the corresponding workout, the workout_id and user_id are necessary for this.
-//must delete foreign key entries in userworkoutperformance, workout exercises, and finally the workout table
+/**
+ *
+ * Deletes the corresponding workout, must delete foreign keys in userworkoutperformance, workoutexercises, and finally
+ * the workout table. This function should be redesigned if we have time so that the SQL query can be changed to an atomic transaction.
+ * @async
+ * @param {req.body.workoutId} - the id of the workout being deleted
+ * @param {req.body.userId} - the id of the user who created the workout
+ *
+ * @returns {Promise<void>} - responds with a message saying the workout has been deleted, or an error
+ *
+ * @example -- Here is the payload to the corresponding HTTP DELETE command:
+ * '{
+ *   "workoutId": 123,
+ *   "userId": 456
+ *}'
+ *
+ */
 const deleteWorkout = async (req, res) => {
     const { workoutId, userId } = req.body; // Expect workoutId and userId in the request body
 
@@ -125,7 +170,16 @@ const deleteWorkout = async (req, res) => {
     }
 };
 
-//get all custom workouts that the user created (this is very similar to )
+
+/**
+ * get all custom workouts that the user created, so that they can be displayed in the client
+ *
+ * @param {id} - the ID of the user who created the workouts
+ *
+ * @returns {Promise<void>} - responds with all workouts and their data, or an error
+ *
+ * @example - there is no payload for the corresponding HTTP GET command, since the ID is passed via the URL
+ */
 const getCustomWorkouts = async (req, res) => {
     const userId = req.params.id; // Extract id from the URL parameter
 

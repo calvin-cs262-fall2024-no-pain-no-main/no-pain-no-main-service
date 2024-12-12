@@ -1,33 +1,21 @@
-/*
-This module contains route hander functions that are required for the API endpoints that are
-defined in server.js
-
-The functions defined in this module are:
-
-1) addSetToExercise
-    Parameters in payload: user id, workout id, exercise id, reps, weight
-
-    This function adds a set to an exercise, and is called when the user clicks the "add set" button
-    The performance_data in the userworkoutperformance table is modified to accomodate this change
-
-2) deleteSetFromExercise
-    Parameters in payload: user id, workout id, exercise id, set number
-
-    Removes the set from the list of sets, and if the set is not the last set of the exercise,
-    subsequent set numbers are changed to maintain sequence (ex. if there are sets 1-4 and set 2 is removed,
-    the remaining sets are numbered 1, 2, and 3)
-
-3) updateSet
-    Parameters in payload: user id, exercise id, workout id, set number,
-    optional Parameters: reps, weight
-
-    Updates the reps, weight, or both of a set if the user decides to change either of these values
-
-
-*/
-
-
-//3) delete exercise from a workout
+/**
+ * This module contains route hander functions that are required for the API endpoints that are
+ * defined in server.js, and handle changes to the sets in an exercise.
+ *
+ * Sets are stored in a singular cell and are associated to the user, workout, and exercise by foreign keys.
+ * The set data looks like this:
+ * {Sets : [
+ *  {set: 1, reps: x, weight: x},
+ *  {set: 2, reps: x, weight: x},
+ *  ...
+ * ]}
+ *
+ * The functions defined are:
+ * 1)addSetToExercise
+ * 2)deleteSetFromExercise
+ * 3)updateSet
+ *
+ */
 const express = require('express');
 const cors = require('cors');
 const { Pool } = require('pg');
@@ -47,8 +35,28 @@ const pool = new Pool({
     ssl: { rejectUnauthorized: false },
 });
 
-//add a set to the exercise, and update the performance_data
-//requirements in payload: user_id, workout_id, and exercise_id
+
+/**
+ * add a set to the exercise by updating the performance_data for the specified exercise
+ *
+ * @async
+ * @param {req.body.user_id} - the user's id
+ * @param {req.body.exercise_id} - the id of the exercise that a set is being added to
+ * @param {req.body.workout_id} - the id of the workout that the exercise is part of
+ * @param {req.body.reps} - the number of reps in the set
+ * @param {req.body.weight} - the weight used for that particular set
+ *
+ * @returns {Promise<void>} - responds with a sucess message and the new set added, or a failure
+ *
+ * @example - the payload of the HTTP PUT command:
+ * '{
+ *   "user_id": 14,
+ *   "exercise_id": 6,
+ *   "workout_id": 245,
+ *   "reps": 12,
+ *   "weight": 200
+ *}'
+ */
 const addSetToExercise = async (req, res) => {
     try {
         const { user_id, exercise_id, workout_id, reps, weight } = req.body;
@@ -91,8 +99,28 @@ const addSetToExercise = async (req, res) => {
     }
 };
 
-//delete the set from the exercise, and update set numbers (ie if sets 1, 2, and 3 exist and set 2 is deleted,
-//remaining sets are labeled 1 and 2)
+
+/**
+ * Delete the set from the exercise, and update set numbers (ie if sets 1, 2, and 3 exist and set 2 is deleted,
+ * remaining sets are labeled 1 and 2)
+ * *NOTE* Since this is just modifying performance_data, this is a PUT command
+ *
+ * @async
+ * @param {req.body.user_id} - the user's id
+ * @param {req.body.exercise_id} - the id of the exercise that a set is being added to
+ * @param {req.body.workout_id} - the id of the workout that the exercise is part of
+ * @param {req.body.set_number} - the set number that is being removed
+ *
+ * @returns {Promise<void>} - returns a message with the deleted set, or an error
+ *
+ * @example - the payload of the HTTP PUT command:
+ *'{
+ *   "user_id": 14,
+ *   "exercise_id": 6,
+ *   "workout_id": 245,
+ *  "set_number": 2
+ *}'
+ */
 //requirements of payload: workout_id, user_id, exercise_id, and the set number
 const deleteSetFromExercise = async (req, res) => {
     try {
@@ -144,8 +172,30 @@ const deleteSetFromExercise = async (req, res) => {
     }
 };
 
-//adjust the weight and reps within a set
-//requirements of payload: workout_id, user_id, exercise_id, and the set number
+/**
+ * The user needs a way to be able to update the reps or weight within a partiular set
+ * The function needs for first fetch the current set data, modify it, then write the updated version back
+ * @async
+ * @param {req.body.user_id} - the user's id
+ * @param {req.body.exercise_id} - the id of the exercise that a set is being added to
+ * @param {req.body.workout_id} - the id of the workout that the exercise is part of
+ * @param {req.body.set_number} - the particular set that the user wants to change
+ * @param {req.body.reps} - the number of reps in the set
+ * @param {req.body.weight} - the weight used for that particular set
+ *
+ * @returns {Promise<void>} - responds with a message and the list of sets, or an error.
+ *
+ * @example - payload of the HTTP PUT command:
+ * -d '{
+ *   "user_id": 14,
+ *   "exercise_id": 6,
+ *   "workout_id": 245,
+ *   "set_number": 2,
+ *   "reps": 12,
+ *   "weight": 175
+ *}'
+ *
+ */
 const updateSet = async (req, res) => {
     try {
         const { user_id, exercise_id, workout_id, set_number, reps, weight } = req.body;

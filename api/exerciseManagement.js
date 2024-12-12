@@ -1,8 +1,20 @@
+/**
+This module contains route hander functions that are required for the API endpoints that are
+defined in server.js.
+
+The functions defined in this module are for adding and deleting exercises from a workout
+    1) addExerciseToWorkout
+    2) deleteExerciseFromWorkout
+
+    Both of these functions make use of database transactions, which groups multiple operations
+    into one atomic command -- this is useful just in case there is an issue, otherwise there may be
+    an instance were rows are properly added/removed from some tables, but not others
+*/
+
 const express = require('express');
 const cors = require('cors');
 const { Pool } = require('pg');
 const dotenv = require('dotenv');
-// const bcrypt = require('bcrypt');
 
 dotenv.config();
 
@@ -18,6 +30,24 @@ const pool = new Pool({
     ssl: { rejectUnauthorized: false },
 });
 
+
+/**
+ * Deletes an exercise from a specific user's workout. This function removes rows
+ *  from the workoutexercises and userworkoutperformance tables.
+ *
+ * @async
+ * @param {string} req.body.user_id - the ID of the user
+ * @param {string} req.body.workout_id - the ID of the workout
+ * @param {string} req.body.exercise_id - the ID of the exercise
+ * @returns {Promise<void>} - Responds with either a success or failure message
+ *
+ * @example Here is an example of the request body:
+ *'{
+ *  "user_id": 40,
+ *   "workout_id": 226,
+ *  "exercise_id": 7
+ *}'
+*/
 const deleteExerciseFromWorkout = async (req, res) => {
     try {
         const { user_id, workout_id, exercise_id } = req.body;
@@ -56,6 +86,30 @@ const deleteExerciseFromWorkout = async (req, res) => {
     }
 };
 
+/**
+ * Add an exercise to a workout.
+ * It updates tables in to workoutexercises and userworkoutperformance.
+ * performance_data is a list of objects, where each item represents a set
+ *
+ *  * @async
+ * @param {string} req.body.user_id - the ID of the user
+ * @param {string} req.body.workout_id - the ID of the workout
+ * @param {string} req.body.exercise_id - the ID of the exercise
+ * @param {string} req.body.performance_data - the set information
+ * @returns {Promise<void>} - Responds with either a success or failure message
+ *
+ * @example Here is an example of the request body:
+ *'{
+ *   "user_id": 40,
+ *  "workout_id": 226,
+ *   "exercise_id": 3,
+ *  "performance_data": {
+ *         "sets": [
+ *          {"set": 1, "reps": 10, "weight": 135}
+ *      ]
+ *  }
+ * }'
+*/
 const addExerciseToWorkout = async (req, res) => {
     try {
         const { user_id, workout_id, exercise_id, performance_data } = req.body;
@@ -64,7 +118,7 @@ const addExerciseToWorkout = async (req, res) => {
             return res.status(400).json({ error: "Missing required fields: user_id, workout_id, exercise_id, performance_data." });
         }
 
-        // Begin a transaction
+        // Begin a transaction(a set of database operations)
         await pool.query('BEGIN');
 
         // Insert into WorkoutExercises

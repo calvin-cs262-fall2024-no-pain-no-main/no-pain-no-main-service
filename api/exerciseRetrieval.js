@@ -1,3 +1,14 @@
+/**
+ * This module defines functions that are used for making GET requests to the database, such as all the available
+ * exercises, the default/template workouts, and the exercises associated to a specific workout
+ *
+ * The functions names that are defined are:
+ * 1)getAllExercises
+ * 2)getWorkoutTemplate
+ * 3)getExercisesInAWorkout
+ */
+
+
 const express = require('express');
 const cors = require('cors');
 const { Pool } = require('pg');
@@ -19,8 +30,17 @@ const pool = new Pool({
 });
 
 
-//get all exercises that we have saved in the database, then the user can
-//search for exercises to add to their workout
+/**
+ * Gets the entire list of exercises that users can choose from to add to their workout.
+ * These exercises are displayed as a list on the front end interface. That way, on the front
+ * end users can filter to find the exercise they are looking for.
+ *
+ * @async
+ *
+ * @returns {Promise<void>} - responds with the exercise data, or an error
+ *
+ * @example - there is no payload required for the HTTP GET command.
+ */
 const getAllExercises = async (req, res) => {
     try {
         const result = await pool.query('SELECT * FROM exercise');
@@ -32,9 +52,11 @@ const getAllExercises = async (req, res) => {
 };
 
 
-// this function returns the default workouts, but has since become depricated
-//because of the new function getCustomWorkouts
-// DO NOT DELETE -- it is still being used in some cases
+/**
+ * This function returns the default/template workouts, but has since become depricated
+ * because of the new function getCustomWorkouts
+ * DO NOT DELETE(yet) -- it is still being called in the client - if there is time, we will remove this
+ */
 const getWorkoutTemplate = async (req, res) => {
     try {
         // Parse the id from req.params and convert it to an integer
@@ -55,9 +77,17 @@ const getWorkoutTemplate = async (req, res) => {
     }
 };
 
-//the ID of the workout is sent in the URL and it
-//returns a list of exercises in the workout.
-//the name, description, muscle group, workout_id, and exercise_id are returned
+/**
+ * returns all the exercises in a specific workout
+ * @async
+ *
+ * @param {id} - the workout id is passed through the URL--> #FIXME if time
+ *
+ * @returns {Promise<void>} - responds with a list of each of the exercises with information about them
+ *
+ * @example - there is no payload for the HTTP GET command.
+ *
+ */
 const getExercisesInAWorkout = async (req, res) => {
     try {
         const id = parseInt(req.params.id, 10);
