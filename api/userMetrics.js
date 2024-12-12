@@ -1,8 +1,19 @@
+/**
+ * This module defines functions associated with getting and setting the user metrics, as well
+ * as deleting a user's account
+ *
+ * The functions defined in this module are:
+ *
+ * 1)updateUserMetrics - used to update the weight, height, or experience of a user
+ * 2)getUserMetrics - fetches the user's metrics, which we hope to use to taylor the rest time
+ * 3)deleteUserAccount - removes the users account and all foreign key associations
+ *
+ */
+
 const express = require('express');
 const cors = require('cors');
 const { Pool } = require('pg');
 const dotenv = require('dotenv');
-const bcrypt = require('bcrypt');
 
 dotenv.config();
 
@@ -18,6 +29,28 @@ const pool = new Pool({
     ssl: { rejectUnauthorized: false },
 });
 
+/**
+ * Updates either the weight, height, experience, or any combination of these metrics for a user.
+ *
+ * All of these metrics can be empty if the user does not wish to disclose these things, but to call
+ * this function at least one metric must be provided.
+ * @async
+ * @param {req.body.id} - the users ID (not their username)
+ * @param {req.body.height} -optional: the users height (in inches/feet)
+ * @param {req.body.weight} -optional: the users weight (in lbs)
+ * @param {req.body.experience_type} -optional: the experience type of the user - beginner, intermediate, experienced
+ *
+ * @returns {Promise<void>} - responds with the updated user metrics, or an error
+ *
+ * @example - The payload for the PUT HTTP command:
+ * -d '{
+ * "id": 123,
+ *"height": 180,
+ * "weight": 75,
+ *"experience_type": "Intermediate"
+ *}'
+ *
+ */
 const updateUserMetrics = async (req, res) => {
     try {
         const { id, height, weight, experience_type } = req.body;
@@ -30,7 +63,7 @@ const updateUserMetrics = async (req, res) => {
             return res.status(400).json({ error: 'At least one metric (height, weight, or experience_type) is required' });
         }
 
-        // Build the dynamic query
+        // Build the dynamic query - since the queries could be different
         const fields = [];
         const values = [];
 
@@ -75,6 +108,19 @@ const updateUserMetrics = async (req, res) => {
     }
 };
 
+/**
+ * Returns the metrics(height, weight, and experience) associated with a user.
+ * @async
+ * @param {req.body.id} - the user's ID
+ *
+ * @returns {Promise<void>} - responds with the user's metrics, or an error
+ *
+ * @example The payload for this HTTP GET:
+ * -d '{
+ *   "id": 1
+ *}'
+ *
+ */
 const getUserMetrics = async (req, res) => {
     try {
         const { id } = req.body;
@@ -96,6 +142,24 @@ const getUserMetrics = async (req, res) => {
     }
 };
 
+
+/**
+ *
+ * Deletes the user account and all other table data associated with the user id primary key.
+ * In order to successfully delete the user from the "users" table, all foreign key rows must be
+ * deleted first - a transaction is used to complete this.
+ *
+ * As of now, this is only being used by the team to purge the database of unnecessary accounts
+ * @async
+ * @param {req.body.id} - the user's id (not the username)
+ *
+ * @returns {Promise<void>} - either a success message, or an error
+ *
+ * @example - the payload for the HTTP DELETE command:
+ *-d '{
+ *  "user_id": 1
+ *}'
+ */
 const deleteUserAccount = async (req, res) => {
     try {
         const { user_id } = req.body;
@@ -152,7 +216,5 @@ const deleteUserAccount = async (req, res) => {
         res.status(500).json({ error: 'Internal server error' });
     }
 };
-
-
 
 module.exports = { getUserMetrics, updateUserMetrics, deleteUserAccount };

@@ -1,8 +1,13 @@
+/**
+ * This module is designated for functions associated with the quiz table. The functions
+ * defined in this module are:
+ * 1) getAllQuizzes
+ */
+
 const express = require('express');
 const cors = require('cors');
 const { Pool } = require('pg');
 const dotenv = require('dotenv');
-const bcrypt = require('bcrypt');
 
 dotenv.config();
 
@@ -18,6 +23,13 @@ const pool = new Pool({
     ssl: { rejectUnauthorized: false },
 });
 
+/**
+ * Fetches all the quiz data from the database
+ *
+ * @async
+ * @example - There is no payload for this HTTP GET command
+ *
+ */
 const getAllQuizzes = async (req, res) => {
     try {
         const result = await pool.query('SELECT * FROM quiz');

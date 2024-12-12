@@ -1,8 +1,16 @@
+/**
+ * This module works with modifying the contents of the main workout table - if the user
+ * wants to modify the name, descrition, or public status, he or she may do so without creating an
+ * entirely new workout.
+ *
+ * The functions contained in this module are:
+ * 1)updateMainWorkoutProfile
+ */
+
 const express = require('express');
 const cors = require('cors');
 const { Pool } = require('pg');
 const dotenv = require('dotenv');
-// const bcrypt = require('bcrypt');
 
 dotenv.config();
 
@@ -19,8 +27,18 @@ const pool = new Pool({
 });
 
 
-//Use this function to update either the name, description, or is_public
-//
+/**
+ * This function is used to update either the name, description, visibility of the workout,
+ * or any combination of these parameters.
+ * @async
+ * @param {req.body.workout_id} - the id of the workout
+ * @param {req.body.user_id} - the id of the user who created the workout
+ * @param {req.body.description} - optional: the description of the workout
+ * @param {req.body.name} - optional: the name of the workout
+ * @param {req.body.is_public} - optional: whether the workout can be seen by the public or not
+ *
+ * @returns {Promise<void>} - responds with a message saying the workout updated successfully, or an error
+ */
 const updateMainWorkoutTable = async (req, res) => {
     try {
         const { workout_id, user_id, description, name, is_public } = req.body;
