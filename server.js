@@ -5,6 +5,9 @@
  *
  * The endpoints defined below are used by the client to interact with the database
  * in a structured manner and provide some layer of abstraction.
+ *
+ * This service assumes that the database connection variables are assigned
+ * in the .env file. They are also initalized on Azure as environment variables.
  */
 
 const express = require('express');
