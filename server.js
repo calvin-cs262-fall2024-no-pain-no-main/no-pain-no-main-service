@@ -8,6 +8,28 @@
  *
  * This service assumes that the database connection variables are assigned
  * in the .env file. They are also initalized on Azure as environment variables.
+ *
+ * A brief overview of our modules are as follows:
+ *
+ * 1) userAuth: this module contains functions for routes that are associated with user authorization,
+ * such as logging in, creating an account, and other features related to a user's account.
+ *
+ * 2) userMetrics: this module contains functions for updating the user metrics, which will be used to help
+ * make the rest time more dynamic to the user.
+ *
+ * 3) setsManagement: contains functions for CRUD operations regarding exercise sets
+ *
+ * 4) quizFunctions: this module contains a function associated with getting the quizzes from the DB
+ *
+ * 5) exerciseRetrieval: this module contains functions that are associated with getting workouts and
+ * exercises so that the user can access them.
+ *
+ * 6) workoutManagement: this module contains functions that are used for saving and deleting workouts.
+ *
+ * 7) exerciseManagement: this module contains functions used for adding or deleting an exercise in a workout.
+ *
+ * 8) updateWorkoutProfile: this module contains a function associated with updating the main
+ *  workout table row for a workout
  */
 
 const express = require('express');
